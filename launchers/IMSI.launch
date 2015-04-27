@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/WALA/src/br/ufpe/cin/analyses/MainAnalysis.java"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="1"/>
+</listAttribute>
+<stringAttribute key="org.eclipse.jdt.launching.JRE_CONTAINER" value="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="br.ufpe.cin.analyses.MainAnalysis"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-classpath /Users/rodrigoandrade/Documents/workspaces/Doutorado/joana/IMSI-example/bin -main records.RuimRecords -sourceDirectory /Users/rodrigoandrade/Documents/workspaces/Doutorado/joana/IMSI-example/src -policyDirectory /Users/rodrigoandrade/Documents/workspaces/Doutorado/joana/WALA/policies/imsi.pl"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="WALA"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xmx800M"/>
+</launchConfiguration>

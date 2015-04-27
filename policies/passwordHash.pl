@@ -1,0 +1,1 @@
+LOGGING auth- model.User {passwordHash};
