@@ -58,14 +58,14 @@ public class Analysis {
 		 * additional MHP analysis to prune interference edges (does not matter
 		 * for programs without multiple threads)
 		 */
-		//config.setMhpType(MHPType.PRECISE);
+		// config.setMhpType(MHPType.PRECISE);
 
 		/**
 		 * precision of the used points-to analysis - INSTANCE_BASED is a good
 		 * value for simple examples
 		 */
 		config.setPointsToPrecision(PointsToPrecision.OBJECT_SENSITIVE);
-		
+
 		/**
 		 * exception analysis is used to detect exceptional control-flow which
 		 * cannot happen
@@ -88,6 +88,18 @@ public class Analysis {
 
 		/** annotate sources and sinks */
 
+		annotateSources(sources, program, ana);
+
+		annotateSinks(sinks, program, ana);
+		// ana.addSourceAnnotation(program.getPart("model.User.passwordHash"),
+		// BuiltinLattices.STD_SECLEVEL_HIGH);
+		// ana.addSinkAnnotation(program.getMethod("util.Log.loggingAction(Ljava/lang/Object;)V"),
+		// BuiltinLattices.STD_SECLEVEL_LOW);
+		return ana;
+	}
+
+	private void annotateSources(List<SDGProgramPart> sources,
+			SDGProgram program, IFCAnalysis ana) {
 		for (SDGProgramPart source : sources) {
 			if (source instanceof SDGMethod) {
 				ana.addSourceAnnotation(program.getMethod(source.toString()),
@@ -105,10 +117,14 @@ public class Analysis {
 							BuiltinLattices.STD_SECLEVEL_HIGH);
 				}
 			} else {
-				ana.addSourceAnnotation(source, BuiltinLattices.STD_SECLEVEL_HIGH);
+				ana.addSourceAnnotation(source,
+						BuiltinLattices.STD_SECLEVEL_HIGH);
 			}
 		}
+	}
 
+	private void annotateSinks(List<SDGProgramPart> sinks, SDGProgram program,
+			IFCAnalysis ana) {
 		for (SDGProgramPart sink : sinks) {
 			if (sink instanceof SDGMethod) {
 				ana.addSinkAnnotation(program.getMethod(sink.toString()),
@@ -124,12 +140,10 @@ public class Analysis {
 					ana.addSinkAnnotation(sdgInstruction,
 							BuiltinLattices.STD_SECLEVEL_LOW);
 				}
-			}  else {
+			} else {
 				ana.addSinkAnnotation(sink, BuiltinLattices.STD_SECLEVEL_LOW);
 			}
 		}
-//		ana.addSourceAnnotation(program.getPart("model.User.passwordHash"), BuiltinLattices.STD_SECLEVEL_HIGH);
-//		ana.addSinkAnnotation(program.getMethod("util.Log.loggingAction(Ljava/lang/Object;)V"), BuiltinLattices.STD_SECLEVEL_LOW);
-		return ana;
 	}
+
 }

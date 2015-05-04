@@ -18,12 +18,12 @@ public class PreprocessorWALA {
 
 	private String defs = ""; // defs are the features (e.g. DEBUG, LOGGING,
 								// etc)
-	private String incdir;
 
 	public PreprocessorWALA(String sourceDirectory) {
 		try {
 			File[] files = new File(sourceDirectory).listFiles();
-			ContextManager.getContext().getClassDirectories(files); //preeche uma lista com todos os arquivos Java do diretorio
+			// preeche uma lista com todos os arquivos Java do diretorio
+			ContextManager.getContext().getClassDirectories(files);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -47,7 +47,7 @@ public class PreprocessorWALA {
 		}
 	}
 
-	private void preprocess() throws IOException {
+	private void preprocess() throws IOException, PreprocessorException {
 		ContextManager context = ContextManager.getContext();
 
 		BufferedReader br = null; // for reading from file
@@ -68,7 +68,6 @@ public class PreprocessorWALA {
 			Pattern pattern = Pattern.compile(Tag.regex,
 					Pattern.CASE_INSENSITIVE);
 
-			String line;
 			int lineNumber = 0; // for counting the line number
 			int currentLevel = 0; // for controling the tags (e.g. ifdefs and
 									// endifs)
@@ -76,114 +75,123 @@ public class PreprocessorWALA {
 			boolean skip = false; // this flag serves to control code within a
 									// certain feature
 
-			// reading line-by-line from input file
-			while ((line = br.readLine()) != null) {
-				lineNumber++;
+			iteratingOverSrcLines(context, br, set, pattern, lineNumber,
+					currentLevel, removeLevel, skip);
 
-				/**
-				 * Creates a matcher that will match the given input against
-				 * this pattern.
-				 */
-				Matcher matcher = pattern.matcher(line);
-
-				/**
-				 * Matches the defined pattern with the current line
-				 */
-				if (matcher.matches()) {
-					/**
-					 * MatchResult is unaffected by subsequent operations
-					 */
-					MatchResult result = matcher.toMatchResult();
-					String dir = result.group(1).toLowerCase(); // preprocessor
-																// directives
-					String param = result.group(2); // feature's name
-
-					if (Tag.IF.equals(dir)) {
-						// adds if X on the stack
-						context.addDirective(dir + " "
-								+ param.replaceAll("\\s", ""));
-
-						// verifies if the feature was defined
-						if (defs.replaceAll("\\s+", "").length() > 0) {
-							skip = !set.contains(param);
-						} else {
-							skip = false;
-						}
-
-						if (removeLevel == -1 && skip) {
-							removeLevel = currentLevel;
-						}
-						currentLevel++;
-						continue;
-					} else if (Tag.IFNDEF.equals(dir)) {
-
-						context.addDirective(dir + " " + param);
-
-						if (defs.replaceAll("\\s+", "").length() > 0) {
-							skip = set.contains(param);
-						} else {
-							skip = false;
-						}
-
-						if (removeLevel == -1 && skip) {
-							removeLevel = currentLevel;
-						}
-						currentLevel++;
-						continue;
-					} else if (Tag.ELSE.equals(dir)) {
-						currentLevel--;
-						if (currentLevel == removeLevel) {
-							removeLevel = -1;
-						}
-						if (removeLevel == -1 && !skip) {
-							removeLevel = currentLevel;
-						}
-						currentLevel++;
-						continue;
-					} else if (Tag.ENDIF.equals(dir)) {
-
-						if (context.stackIsEmpty()) {
-							System.out
-									.println("#endif encountered without corresponding #ifdef or #ifndef");
-							return;
-						}
-
-						context.removeTopDirective();
-
-						currentLevel--;
-						if (currentLevel == removeLevel) {
-							removeLevel = -1;
-						}
-						continue;
-					} else if (Tag.INCLUDE.equals(dir)) {
-						// include(param, bw);
-						continue;
-					}
-				} else {
-					/**
-					 * verifies if the current line does not have text (code)
-					 */
-					if (!line.trim().isEmpty()) {
-						/**
-						 * Add information on mapping between feature expression
-						 * and line number.
-						 */
-						addInfoOnMapping(context, lineNumber);
-					}
-				}
-			}
-
-			String className = prepareClassName(srcFile);
-
-			context.getMapClassFeatures()
-					.put(className,
-							new HashMap<String, Set<Integer>>(context
-									.getMapFeatures()));
-			context.clearAll();
+			mappingClassesAndFeatures(context, srcFile);
 		}
 		if (br != null) {
 			br.close();
 		}
+	}
+
+	private void iteratingOverSrcLines(ContextManager context,
+			BufferedReader br, Set<String> set, Pattern pattern,
+			int lineNumber, int currentLevel, int removeLevel, boolean skip)
+			throws IOException, PreprocessorException {
+		String line;
+		// reading line-by-line from input file
+		while ((line = br.readLine()) != null) {
+			lineNumber++;
+
+			/**
+			 * Creates a matcher that will match the given input against this
+			 * pattern.
+			 */
+			Matcher matcher = pattern.matcher(line);
+
+			/**
+			 * Matches the defined pattern with the current line
+			 */
+			if (matcher.matches()) {
+				/**
+				 * MatchResult is unaffected by subsequent operations
+				 */
+				MatchResult result = matcher.toMatchResult();
+				String dir = result.group(1).toLowerCase(); // preprocessor
+															// directives
+				String param = result.group(2); // feature's name
+
+				if (Tag.IF.equals(dir)) {
+					addingIFTagOnStack(context, set, currentLevel, removeLevel,
+							dir, param);
+					continue;
+				} else if (Tag.ELSE.equals(dir)) {
+					addingElseTagOnStack(currentLevel, removeLevel, skip);
+					continue;
+				} else if (Tag.ENDIF.equals(dir)) {
+
+					addingEndifTagOnStack(context, currentLevel, removeLevel);
+					continue;
+				}
+			} else {
+				/**
+				 * verifies if the current line does not have text (code)
+				 */
+				if (!line.trim().isEmpty()) {
+					/**
+					 * Add information on mapping between feature expression and
+					 * line number.
+					 */
+					addInfoOnMapping(context, lineNumber);
+				}
+			}
+		}
+	}
+
+	private void addingEndifTagOnStack(ContextManager context,
+			int currentLevel, int removeLevel) throws PreprocessorException {
+		if (context.stackIsEmpty()) {
+			throw new PreprocessorException("#endif encountered without "
+					+ "corresponding #ifdef");
+		}
+
+		context.removeTopDirective();
+
+		currentLevel--;
+		if (currentLevel == removeLevel) {
+			removeLevel = -1;
+		}
+	}
+
+	private void addingElseTagOnStack(int currentLevel, int removeLevel,
+			boolean skip) {
+		currentLevel--;
+		if (currentLevel == removeLevel) {
+			removeLevel = -1;
+		}
+		if (removeLevel == -1 && !skip) {
+			removeLevel = currentLevel;
+		}
+		currentLevel++;
+	}
+
+	private void addingIFTagOnStack(ContextManager context, Set<String> set,
+			int currentLevel, int removeLevel, String dir, String param) {
+		boolean skip;
+		// adds if X on the stack
+		context.addDirective(dir + " " + param.replaceAll("\\s", ""));
+
+		// verifies if the feature was defined
+		if (defs.replaceAll("\\s+", "").length() > 0) {
+			skip = !set.contains(param);
+		} else {
+			skip = false;
+		}
+
+		if (removeLevel == -1 && skip) {
+			removeLevel = currentLevel;
+		}
+		currentLevel++;
+	}
+
+	private void mappingClassesAndFeatures(ContextManager context,
+			String srcFile) {
+		String className = prepareClassName(srcFile);
+
+		context.getMapClassFeatures().put(className,
+				new HashMap<String, Set<Integer>>(context.getMapFeatures()));
+		context.clearAll();
 	}
 
 	private String prepareClassName(String srcFile) {
@@ -222,9 +230,9 @@ public class PreprocessorWALA {
 			// gets feature's name
 			String feature = auxStack.peek().split(" ")[1];
 
-			if (auxStack.peek().contains(Tag.IFNDEF)) {
-				feature = "~" + feature;
-			}
+			// if (auxStack.peek().contains(Tag.IFNDEF)) {
+			// feature = "~" + feature;
+			// }
 
 			// add info about line number of a certain feature
 			context.addFeatureInfo(feature, infoLine);
@@ -235,41 +243,4 @@ public class PreprocessorWALA {
 
 		auxStack.clear();
 	}
-
-	public String getDefs() {
-		return defs;
-	}
-
-	public String getIncdir() {
-		return incdir;
-	}
-
-	public void setDefs(String defs) {
-		this.defs = defs;
-	}
-
-	public void setIncdir(String incdir) {
-		this.incdir = incdir;
-	}
-
-	// public static void main(String[] args) {
-	//
-	// // sets the IO files
-	// ContextManager manager = ContextManager.getContext();
-	// manager.setSrcfile("Out.groovy");
-	// manager.setDestfile("Testclass2.groovy");
-	//
-	// PreprocessorWALA pp = new PreprocessorWALA();
-	//
-	// String defs = "";// "A , SOMA";
-	// pp.setDefs(defs);
-	//
-	// // TODO create the graphic interface
-	// try {
-	// pp.execute();
-	// } catch (PreprocessorException e) {
-	// // TODO Auto-generated catch block
-	// e.printStackTrace();
-	// }
-	// }
 }
