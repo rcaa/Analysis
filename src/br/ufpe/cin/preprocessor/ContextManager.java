@@ -1,17 +1,13 @@
 package br.ufpe.cin.preprocessor;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
 public class ContextManager {
-	
+
 	// for class, feature, line number
 	private Map<String, Map<String, Set<Integer>>> mapClassFeatures;
 	// for features and their line number
@@ -20,8 +16,6 @@ public class ContextManager {
 	// for controlling the pairs ifdef-endifs
 	public static Stack<String> stackDirectives;
 
-	private List<String> srcFiles; // input file paths
-	
 	// singleton
 	private final static ContextManager instance = new ContextManager();
 
@@ -30,7 +24,6 @@ public class ContextManager {
 		mapFeatures = new HashMap<String, Set<Integer>>();
 		mapLineNumberFeature = new HashMap<Integer, Set<String>>();
 		stackDirectives = new Stack<String>();
-		this.srcFiles = new ArrayList<>();
 	}
 
 	public static ContextManager getContext() {
@@ -65,41 +58,6 @@ public class ContextManager {
 		mapFeatures.put(key, setLineNumbers);
 	}
 
-	public List<String> getSrcFiles() {
-		return srcFiles;
-	}
-
-	public void setSrcFiles(List<String> srcFiles) {
-		this.srcFiles = srcFiles;
-	}
-
-	public Map<Integer, Set<String>> getMap() {
-		return mapLineNumberFeature;
-	}
-
-	/**
-	 * This method is called for getting number lines.
-	 * 
-	 * @param feature
-	 *            - the key of the map
-	 * @return number lines or null
-	 */
-	public Set<Integer> getLineNumbersbyFeature(String feature) {
-
-		if (mapFeatures.containsKey(feature))
-			return mapFeatures.get(feature);
-		else
-			return null;
-	}
-
-	public Set<String> getFeaturesByLine(Integer line) {
-		if (mapLineNumberFeature.containsKey(line)) {
-			return mapLineNumberFeature.get(line);
-		} else {
-			return null;
-		}
-	}
-	
 	public Map<String, Set<Integer>> getMapFeatures() {
 		return mapFeatures;
 	}
@@ -110,12 +68,6 @@ public class ContextManager {
 
 	public void removeTopDirective() {
 		stackDirectives.pop();
-	}
-
-	public String getTopDirective() {
-		if (!stackDirectives.isEmpty())
-			return stackDirectives.peek();
-		return null; // empty
 	}
 
 	public boolean stackIsEmpty() {
@@ -130,28 +82,8 @@ public class ContextManager {
 		mapFeatures.clear();
 		stackDirectives.clear();
 	}
-	
+
 	public Map<String, Map<String, Set<Integer>>> getMapClassFeatures() {
 		return mapClassFeatures;
 	}
-
-	/**
-	 * Searches for files to have preprocessor tags mapped
-	 * @param files
-	 * @throws IOException
-	 */
-	public void getClassDirectories(File[] files) throws IOException {
-		for (File file : files) {
-			if (file.isDirectory()) {
-				getClassDirectories(file.listFiles());
-			} else {
-				// caso deseje-se considerar outros tipos de arquivos, eh so
-				// adicionar a terminacao
-				if (file.getName().endsWith(".java")) {
-					srcFiles.add(file.getCanonicalPath());
-				}
-			}
-		}
-	}
-
 }

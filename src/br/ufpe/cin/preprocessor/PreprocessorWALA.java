@@ -23,7 +23,7 @@ public class PreprocessorWALA {
 		try {
 			File[] files = new File(sourceDirectory).listFiles();
 			// preeche uma lista com todos os arquivos Java do diretorio
-			ContextManager.getContext().getClassDirectories(files);
+			SrcManager.getSrcManager().getClassDirectories(files);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -31,8 +31,9 @@ public class PreprocessorWALA {
 
 	public void execute() throws PreprocessorException {
 		ContextManager context = ContextManager.getContext();
+		SrcManager srcmanager = SrcManager.getSrcManager();
 
-		if (context.getSrcFiles() == null || context.getSrcFiles().isEmpty()) {
+		if (srcmanager.getSrcFiles() == null || srcmanager.getSrcFiles().isEmpty()) {
 			throw new PreprocessorException(
 					"Some parameter missed. Make sure that definition list and input files are provided.");
 		}
@@ -49,10 +50,11 @@ public class PreprocessorWALA {
 
 	private void preprocess() throws IOException, PreprocessorException {
 		ContextManager context = ContextManager.getContext();
+		SrcManager srcmanager = SrcManager.getSrcManager();
 
 		BufferedReader br = null; // for reading from file
 
-		List<String> srcFiles = context.getSrcFiles();
+		List<String> srcFiles = srcmanager.getSrcFiles();
 
 		for (String srcFile : srcFiles) {
 			br = new BufferedReader(new FileReader(srcFile));
