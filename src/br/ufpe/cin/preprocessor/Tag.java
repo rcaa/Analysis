@@ -20,7 +20,7 @@ public final class Tag {
 			// + "|" + INCLUDE
 			+ ")\\s*(.*)\\s*$";
 
-	public static final String ifdefRegex = "^\\s*" + comment + "(" + IF
-	// + "|" + IFNDEF
-			+ "|" + ELSE + ")\\s*(.*)\\s*$";
+//	public static final String ifdefRegex = "^\\s*" + comment + "(" + IF
+//	// + "|" + IFNDEF
+//			+ "|" + ELSE + ")\\s*(.*)\\s*$";
 }

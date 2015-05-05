@@ -1,9 +1,14 @@
-package br.ufpe.cin.joana.analyses.informationflow;
+package br.ufpe.cin.analyses;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import br.ufpe.cin.policy.Policy;
+
+import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.cha.ClassHierarchyException;
 import com.ibm.wala.util.CancelException;
 import com.ibm.wala.util.NullProgressMonitor;
@@ -12,6 +17,7 @@ import com.ibm.wala.util.graph.GraphIntegrity.UnsoundGraphException;
 import edu.kit.joana.api.IFCAnalysis;
 import edu.kit.joana.api.lattice.BuiltinLattices;
 import edu.kit.joana.api.sdg.SDGAttribute;
+import edu.kit.joana.api.sdg.SDGClass;
 import edu.kit.joana.api.sdg.SDGConfig;
 import edu.kit.joana.api.sdg.SDGInstruction;
 import edu.kit.joana.api.sdg.SDGMethod;
@@ -22,7 +28,7 @@ import edu.kit.joana.util.Stubs;
 import edu.kit.joana.wala.core.SDGBuilder.ExceptionAnalysis;
 import edu.kit.joana.wala.core.SDGBuilder.PointsToPrecision;
 
-public class Analysis {
+public class IFCAnalysisConfig {
 
 	public SDGProgram prepareAnalysis(String classPath,
 			JavaMethodSignature entryMethod) throws ClassHierarchyException,
@@ -142,6 +148,45 @@ public class Analysis {
 				}
 			} else {
 				ana.addSinkAnnotation(sink, BuiltinLattices.STD_SECLEVEL_LOW);
+			}
+		}
+	}
+
+	public void prepareListsOfSourceAndSinks(Collection<SDGClass> classes,
+			Map<String, Map<String, Set<Integer>>> mapClassFeatures,
+			Policy policy, List<SDGProgramPart> sources,
+			List<SDGProgramPart> sinks) {
+		for (SDGClass sdgClass : classes) {
+			if (!mapClassFeatures.containsKey(sdgClass.toString())) {
+				continue;
+			}
+
+			// por enquanto so marca atributo como source
+			for (SDGAttribute sdgAttribute : sdgClass.getAttributes()) {
+				if (sdgAttribute.toString().equals(
+						policy.getSensitiveResource())) {
+					sources.add(sdgAttribute);
+				}
+			}
+
+			// por enquanto so marca instrucao de metodo como sink
+			for (SDGMethod sdgMethod : sdgClass.getMethods()) {
+				IMethod meth = sdgMethod.getMethod();
+				List<SDGInstruction> methodInstructions = sdgMethod
+						.getInstructions();
+				for (SDGInstruction sdgInstruction : methodInstructions) {
+					Map<String, Set<Integer>> mapFeatures = mapClassFeatures
+							.get(sdgClass.toString());
+					Set<Integer> lineNumbers = mapFeatures.get(policy
+							.getFeature());
+
+					Integer sourceLine = meth.getLineNumber(sdgInstruction
+							.getBytecodeIndex());
+
+					if (lineNumbers != null && lineNumbers.contains(sourceLine)) {
+						sinks.add(sdgInstruction);
+					}
+				}
 			}
 		}
 	}
