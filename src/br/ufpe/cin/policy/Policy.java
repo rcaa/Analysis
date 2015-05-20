@@ -8,7 +8,7 @@ import java.nio.file.Path;
 public class Policy {
 
 	private String feature;
-	private String auth;
+	private String operator;
 	private String clazz;
 	private String programElement;
 
@@ -17,11 +17,11 @@ public class Policy {
 		try {
 			String policy = new String(Files.readAllBytes(path));
 			String[] elements = policy.split(" ");
-			this.feature = elements[0];
-			this.auth = elements[1];
-			this.clazz = elements[2];
-			this.programElement = elements[3].substring(1,
-					elements[3].length() - 2);
+			this.clazz = elements[0];
+			this.programElement = elements[1].substring(1,
+					elements[1].length() - 1);
+			this.operator = elements[2];
+			this.feature = elements[3];
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -50,15 +50,14 @@ public class Policy {
 	public void setProgramElement(String programElement) {
 		this.programElement = programElement;
 	}
-	
+
 	public String getSensitiveResource() {
 		return clazz + "." + programElement;
 	}
 
 	@Override
 	public String toString() {
-		return this.feature + " " + this.auth + " " + this.clazz + " {"
-				+ this.programElement + "};";
+		return this.clazz + " {" + this.programElement + "}" + " "
+				+ this.operator + " " + this.feature + ";";
 	}
-
 }

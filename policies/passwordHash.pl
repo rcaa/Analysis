@@ -1,1 +1,1 @@
-LOGGING auth- model.User {passwordHash};
+model.User {passwordHash} noflow LOGGING
