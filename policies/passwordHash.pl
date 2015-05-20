@@ -1,1 +1,1 @@
-model.User {passwordHash} noflow LOGGING
+LOGGING noset model.User {passwordHash}

@@ -165,7 +165,11 @@ public class IFCAnalysisConfig {
 			for (SDGAttribute sdgAttribute : sdgClass.getAttributes()) {
 				if (sdgAttribute.toString().equals(
 						policy.getSensitiveResource())) {
-					sources.add(sdgAttribute);
+					if (policy.getOperator().equals("noflow")) {
+						sources.add(sdgAttribute);
+					} else if (policy.getOperator().equals("noset")) {
+						sinks.add(sdgAttribute);
+					}
 				}
 			}
 
@@ -184,7 +188,12 @@ public class IFCAnalysisConfig {
 							.getBytecodeIndex());
 
 					if (lineNumbers != null && lineNumbers.contains(sourceLine)) {
-						sinks.add(sdgInstruction);
+						if (policy.getOperator().equals("noflow")) {
+							sinks.add(sdgInstruction);
+						} else if (policy.getOperator().equals("noset")) {
+							sources.add(sdgInstruction);
+						}
+
 					}
 				}
 			}

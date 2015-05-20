@@ -16,12 +16,21 @@ public class Policy {
 		Path path = FileSystems.getDefault().getPath(policyDirectory);
 		try {
 			String policy = new String(Files.readAllBytes(path));
-			String[] elements = policy.split(" ");
-			this.clazz = elements[0];
-			this.programElement = elements[1].substring(1,
-					elements[1].length() - 1);
-			this.operator = elements[2];
-			this.feature = elements[3];
+			if (policy.contains("noflow")) {
+				String[] elements = policy.split(" ");
+				this.clazz = elements[0];
+				this.programElement = elements[1].substring(1,
+						elements[1].length() - 1);
+				this.setOperator(elements[2]);
+				this.feature = elements[3];
+			} else if (policy.contains("noset")) {
+				String[] elements = policy.split(" ");
+				this.feature = elements[0];
+				this.setOperator(elements[1]);
+				this.clazz = elements[2];
+				this.programElement = elements[3].substring(1,
+						elements[3].length() - 1);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -58,6 +67,14 @@ public class Policy {
 	@Override
 	public String toString() {
 		return this.clazz + " {" + this.programElement + "}" + " "
-				+ this.operator + " " + this.feature + ";";
+				+ this.getOperator() + " " + this.feature + ";";
+	}
+
+	public String getOperator() {
+		return operator;
+	}
+
+	public void setOperator(String operator) {
+		this.operator = operator;
 	}
 }
